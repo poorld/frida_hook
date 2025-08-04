@@ -33,6 +33,16 @@ function traceMethod(targetClassMethod, isPrintStack = false) {
         return;
     }
 
+    const previewMethods = new Set([
+
+    ]);
+
+    if (previewMethods.has(targetMethod)) {
+        console.log(`Skipping preview method: ${targetClassMethod}`);
+        return;
+    }
+
+
     let hook;
     try {
         hook = Java.use(targetClass);
@@ -149,7 +159,7 @@ function traceClass(targetClass, printStack = false) {
 
 // setImmediate(traceClass('com.android.server.wm.WindowState'))
 // setImmediate(traceClass('com.android.server.wm.DisplayPolicy'))
-// setImmediate(traceClass('com.android.server.display.DisplayManagerService'))
+setImmediate(traceClass('com.android.server.display.DisplayManagerService'))
 
 
 // setImmediate(traceClass('android.hardware.camera2.CameraManager$CameraManagerGlobal'))
@@ -157,6 +167,16 @@ function traceClass(targetClass, printStack = false) {
 // setImmediate(traceClass('com.android.server.StorageManagerService#onDiskScannedLocked'))
 // setImmediate(traceClass('com.android.internal.app.LocaleStore'))  
 // setImmediate(traceClass('com.android.camera.VideoModule'))
-setImmediate(traceClass('com.android.server.wm.WindowManagerService'))  
+// setImmediate(traceClass('com.android.server.wm.WindowManagerService'))  
+// setImmediate(traceClass('com.android.server.wm.DisplayPolicy'))
 
+// setImmediate(traceClass('net.sourceforge.opencamera.preview.Preview'))
 
+// setImmediate(traceClass('net.sourceforge.opencamera.cameracontroller.CameraController1'))
+
+// setImmediate(traceClass('com.hlct.navigation.utlis.L$Companion'))
+// setImmediate(traceClass('com.hlct.navigation.ui.model.MainViewModel'))
+// setImmediate(traceClass('com.hlct.navigation.communication.phone.PhoneServer'))
+// setImmediate(traceClass('com.android.launcher3.LauncherModel'))
+// setImmediate(traceClass('com.android.permissioncontroller.permission.model.AppPermissions'))
+// setImmediate(traceClass('com.android.server.policy.PhoneWindowManager'))

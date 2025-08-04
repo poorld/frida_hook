@@ -129,7 +129,6 @@ function hookMethod(classAndMethod, callback = null, printStack = false) {
 
 
 // --- 简化版别名函数 ---
-
 /** 简单 Hook，可带回调 */
 const hookM = (classAndMethod, callback) => hookMethod(classAndMethod, callback, false);
 
@@ -142,132 +141,16 @@ const trace = (classAndMethod) => hookMethod(classAndMethod, null, false);
 /** 追踪方法调用并打印调用栈 */
 const traceStack = (classAndMethod) => hookMethod(classAndMethod, null, true);
 
- 
-/**
- * ===================================================================================
- *                                  HOOK CONFIGURATION
- * ===================================================================================
- * 所有的 Hook 都集中在这里管理。
- * 只需要修改 'enabled' 属性为 true 或 false 即可启用或禁用对应的 Hook。
- * ===================================================================================
- */
-const hooksToApply = [
-    // --- Mediatek Camera Hooks ---
-    {
-        enabled: false,
-        target: 'com.mediatek.camera.feature.setting.CameraSwitcher#getCamerasFacing',
-        callback: (obj, numOfCameras) => {
-            console.log("Original mIdList from instance:", obj.mIdList.value);
-            const ArrayList = Java.use('java.util.ArrayList');
-            const newList = ArrayList.$new();
-            newList.add("back");
-            newList.add("front");
-            return interdict(newList);
-        }
-    },
-    {
-        enabled: false,
-        target: 'com.mediatek.camera.common.utils.CameraUtil#isTablet',
-        callback: () => interdict(false)
-    },
 
-    // --- OpenCamera Hooks ---
-    {
-        enabled: false,
-        target: 'net.sourceforge.opencamera.preview.Preview#openCameraCore',
-        callback: (obj, p1) => {
-            console.log('using_android_l ', obj.using_android_l.value);
-            obj.using_android_l.value = true;
-            return pass();
-        }
-    },
-
-    // --- System Server & Framework Hooks ---
-    {
-        enabled: false,
-        target: 'com.android.server.policy.PhoneWindowManager#interceptKeyBeforeDispatching',
-        callback: () => interdict(-1)
-    },
-    {
-        enabled: false,
-        target: 'com.android.server.wm.DisplayContent#getOrientation',
-        callback: () => interdict(4) // Example: Force an orientation
-    },
-    {
-        enabled: false,
-        target: 'com.android.server.wm.DisplayPolicy#requestTransientBars',
-        callback: () => interdict()
-    },
-    {
-        enabled: false,
-        target: 'com.android.systemui.statusbar.policy.BatteryControllerImpl#fireBatteryLevelChanged',
-        callback: (obj) => {
-            obj.mLevel.value = 15; // Example: Set battery level
-            obj.mPluggedIn.value = false;
-            obj.mCharging.value = false;
-            return pass();
-        }
-    },
-
-    // --- Launcher Hooks ---
-    {
-        enabled: false,
-        target: 'com.android.launcher3.model.AddWorkspaceItemsTask#findSpaceForItem',
-        callback: () => {
-            // Example: Force add item to hotseat
-            const intArray = Java.array('int', [-101, 0, 0]);
-            return interdict(intArray);
-        }
-    },
-
-    // --- HLCT Navigation Hooks ---
-    {
-        enabled: false,
-        target: 'me.f1reking.serialportlib.SerialPortHelper#openSafe',
-        callback: (obj, arg0, arg1, arg2, arg3, arg4, arg5, arg6) => {
-            let res = obj.openSafe(arg0, 115200, arg2, arg3, arg4, arg5, arg6);
-            LOG('res=' + res);
-            return interdict(res);
-        }
-    },
-    { enabled: false, target: 'com.hlct.navigation.utlis.L$Companion#d' },
-    { enabled: false, target: 'com.hlct.navigation.utlis.L$Companion#e' },
-    { enabled: false, target: 'com.hlct.navigation.utlis.L$Companion#i' },
-    { enabled: false, target: 'com.hlct.navigation.utlis.L$Companion#v' },
-    { enabled: false, target: 'com.hlct.navigation.utlis.L$Companion#w' },
-    { enabled: false, target: 'com.hlct.navigation.communication.phone.PhoneServer#sendMsg' },
-    { enabled: false, target: 'com.hlct.navigation.communication.phone.PhoneServer$openPort$1#onDataReceived' },
-
-    // --- Add other hooks here in the same format ---
-    // {
-    //     enabled: false,
-    //     target: 'some.class.name#someMethod',
-    //     callback: (obj, args...) => { /* ... */ },
-    //     printStack: true // Optional
-    // },
-];
-
-/**
- * ===================================================================================
- *                                  HOOK APPLICATION
- * ===================================================================================
- * This section automatically applies all hooks marked as 'enabled: true'.
- * You don't need to modify this part.
- * ===================================================================================
- */
-function applyEnabledHooks() {
-    Java.perform(() => {
-        LOG("Scanning for enabled hooks...", { subTag: "HookManager" });
-        hooksToApply.forEach(hookInfo => {
-            if (hookInfo.enabled) {
-                const { target, callback, printStack } = hookInfo;
-                LOG(`Applying hook to: ${target}`, { subTag: "HookManager" });
-                hookMethod(target, callback || null, printStack || false);
-            }
-        });
-        LOG("All enabled hooks have been applied.", { subTag: "HookManager" });
-    });
-}
-
-// Automatically apply all enabled hooks when the script is loaded.
-applyEnabledHooks();
+// 导出模块 (使用标准的 ES Module 语法)
+export {
+    LOG,
+    printStackTrace,
+    hookMethod,
+    hookM,
+    hookStack,
+    trace,
+    traceStack,
+    pass,
+    interdict
+};
