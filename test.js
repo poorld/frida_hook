@@ -4,15 +4,15 @@
  */
 
 // 导入 hookM.js 导出的模块
-import { hookM, hookStack, hookStack, hookMethod, pass, interdict, LOG } from './hookM.js';
-
+// import { hookM, hookStack, hookStack, hookMethod, pass, interdict, LOG } from './hookM.js';
+import { hookMethod, pass, interdict,LOG } from './hookM.js';
 LOG("--- Custom Script Start ---");
 
 
 let hooksToApply = [
     // --- Mediatek Camera Hooks ---
     {
-        enabled: false,
+        enabled: true,
         target: 'com.mediatek.camera.feature.setting.CameraSwitcher#getCamerasFacing',
         callback: (obj, numOfCameras) => {
             console.log("Original mIdList from instance:", obj.mIdList.value);
@@ -21,6 +21,30 @@ let hooksToApply = [
             newList.add("back");
             newList.add("front");
             return interdict(newList);
+        }
+    },
+    {
+        enabled: true,
+        target: 'com.mediatek.camera.CameraActivity#onCreateTasks',
+        callback: (obj, savedInstanceState) => {
+            obj.onCreateTasks(savedInstanceState)
+            const View = Java.use('android.view.View');
+            const uiOptions =
+                View.SYSTEM_UI_FLAG_IMMERSIVE.value |
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.value |
+                View.SYSTEM_UI_FLAG_FULLSCREEN.value |
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE.value |
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION.value |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN.value;
+
+            let window = obj.getActivity().getWindow();
+            let view = window.getDecorView();
+            console.log(view);
+            console.log('uiOptions', uiOptions);
+            
+            view.setSystemUiVisibility(uiOptions);
+            obj.getWindow().getDecorView().setSystemUiVisibility(uiOptions);
+            return interdict()
         }
     },
     {
