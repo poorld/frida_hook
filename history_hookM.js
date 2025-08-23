@@ -89,19 +89,19 @@
 
 // hookM('com.mediatek.camera.common.utils.CameraUtil#getOptimalPreviewSize')
 // hookM('com.mediatek.camera.common.utils.CameraUtil#findBestMatchPanelSize', (obj, sizes, previewRatio, panelWidth, panelHeight) => {
-//     // previewRatio = 1.5
-//     // let  size = obj.findBestMatchPanelSize(sizes, previewRatio, panelWidth, panelHeight)
-//     // size = Java.cast(size, Java.use('com.mediatek.camera.common.utils.Size'))
-//     // // size.mWidth.value = 320
-//     // // size.mHeight.value = 240
+//     previewRatio = 1.5
+//     let  size = obj.findBestMatchPanelSize(sizes, previewRatio, panelWidth, panelHeight)
+//     size = Java.cast(size, Java.use('com.mediatek.camera.common.utils.Size'))
+//     // size.mWidth.value = 320
+//     // size.mHeight.value = 240
 
-//     // console.log('size', size);
+//     console.log('size', size);
 
-//     // for (let i = 0; i < sizes.size(); i++) {
-//     //     console.log(sizes.get(i));
-//     // }
+//     for (let i = 0; i < sizes.size(); i++) {
+//         console.log(sizes.get(i));
+//     }
     
-//     // return interdict(size)
+//     return interdict(size)
 // })
 
 // let start = false

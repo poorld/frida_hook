@@ -159,7 +159,8 @@ function traceClass(targetClass, printStack = false) {
 
 // setImmediate(traceClass('com.android.server.wm.WindowState'))
 // setImmediate(traceClass('com.android.server.wm.DisplayPolicy'))
-setImmediate(traceClass('com.android.server.display.DisplayManagerService'))
+// setImmediate(traceClass('com.android.server.display.DisplayManagerService'))
+setImmediate(traceClass('com.android.server.display.DisplayManagerService$BinderService'))
 
 
 // setImmediate(traceClass('android.hardware.camera2.CameraManager$CameraManagerGlobal'))

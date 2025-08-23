@@ -12,7 +12,7 @@ LOG("--- Custom Script Start ---");
 let hooksToApply = [
     // --- Mediatek Camera Hooks ---
     {
-        enabled: true,
+        enabled: false,
         target: 'com.mediatek.camera.feature.setting.CameraSwitcher#getCamerasFacing',
         callback: (obj, numOfCameras) => {
             console.log("Original mIdList from instance:", obj.mIdList.value);
@@ -24,7 +24,7 @@ let hooksToApply = [
         }
     },
     {
-        enabled: true,
+        enabled: false,
         target: 'com.mediatek.camera.CameraActivity#onCreateTasks',
         callback: (obj, savedInstanceState) => {
             obj.onCreateTasks(savedInstanceState)
@@ -120,13 +120,167 @@ let hooksToApply = [
     { enabled: false, target: 'com.hlct.navigation.communication.phone.PhoneServer#sendMsg' },
     { enabled: false, target: 'com.hlct.navigation.communication.phone.PhoneServer$openPort$1#onDataReceived' },
 
-    // --- Add other hooks here in the same format ---
-    // {
-    //     enabled: false,
-    //     target: 'some.class.name#someMethod',
-    //     callback: (obj, args...) => { /* ... */ },
-    //     printStack: true // Optional
-    // },
+    {
+        enabled: false,
+        target: 'com.android.server.display.DisplayManagerService$BinderService#createVirtualDisplay',
+        callback: (obj, virtualDisplayConfig, callback, projection, virtualDevice, dwpc, packageName) => {
+            return pass();
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#sleepDefaultDisplayFromPowerButton',
+        callback: (obj) => {
+            return pass();
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#powerPress',
+        callback: (obj) => {
+            return pass();
+        }
+    },
+    // com.android.server.policy.PhoneWindowManager.shouldHandleShortPressPowerAction
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#shouldHandleShortPressPowerAction',
+        callback: (obj) => {
+            return pass();
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#backKeyPress',
+        callback: (obj) => {
+            return pass();
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#interceptKeyBeforeQueueing',
+        callback: (obj, event, policyFlags) => {
+            let KeyEvent = Java.cast(event, Java.use('android.view.KeyEvent'))
+            const targetKeyCode = 4;    // KEYCODE_BACK
+            const targetScanCode = 158; // BACK键的常见scancode
+            let flag = 0
+
+            let newKeyEvent = KeyEvent.$new(
+                event.getDownTime(),
+                event.getEventTime(),
+                event.getAction(),            // 使用原始的action (按下/抬起)
+                targetKeyCode,     // [修改点] 使用我们目标的KeyCode (BACK)
+                event.getRepeatCount(),
+                event.getMetaState(),
+                -1,
+                targetScanCode,    // [修改点] 使用我们目标的ScanCode
+                flag | KeyEvent.FLAG_FROM_SYSTEM.value | KeyEvent.FLAG_VIRTUAL_HARD_KEY.value,
+                // InputDevice.SOURCE_KEYBOARD.value
+                257
+            );
+            console.log('newKeyEvent', newKeyEvent)
+            let context = Java.cast(obj.mContext.value, Java.use('android.content.Context'))
+            // let res = obj.interceptKeyBeforeQueueing(newKeyEvent, policyFlags)
+            const InputManager = Java.use('android.hardware.input.InputManager')
+            const inputManager = context.getSystemService("input");
+            let im = Java.cast(inputManager, InputManager);
+            /**
+             * yuy setSource
+             */
+            newKeyEvent.setSource(9527);
+            im.injectInputEvent(newKeyEvent, InputManager.INJECT_INPUT_EVENT_MODE_ASYNC.value);
+            return pass();
+        }
+    },
+
+    {
+        // android.hardware.input.InputManager#injectInputEvent
+        enabled: false,
+        target: 'android.hardware.input.InputManager#injectInputEvent',
+        callback: (obj, event, flag) => {
+            let keyEvent = Java.cast(event, Java.use('android.view.KeyEvent'))
+            keyEvent.mScanCode.value = 158
+            keyEvent.mFlags.value = 8 
+            keyEvent.mMetaState.value = 2097152
+            keyEvent.mSource.value = 769
+            keyEvent.mDisplayId.value=0
+            console.log('keyEvent', keyEvent)
+            let res = obj.injectInputEvent(keyEvent, flag)
+            console.log('res', res)
+            return interdict(res);
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#interceptKeyBeforeQueueing',
+        callback: (obj, event, policyFlags) => {
+            const KeyEvent = Java.use('android.view.KeyEvent')
+            let down = event.getAction() == KeyEvent.ACTION_DOWN.value;
+            console.log('down', down)
+            
+            let res = 0;
+            if (down) {
+                res = obj.interceptKeyBeforeQueueing(event, 570425345)
+            }else {
+                res = obj.interceptKeyBeforeQueueing(event, 570425344)
+            }
+            console.log('res', res)
+            return interdict(res);
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager$PolicyHandler#handleMessage',
+        callback: (obj) => {
+            return pass()
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.settings.password.ConfirmDeviceCredentialBaseActivity#getConfirmCredentialTheme'
+    }, 
+    {
+        enabled: false,
+        target: 'com.mediatek.camera.common.utils.CameraUtil#findBestMatchPanelSize',
+        callback: (obj, sizes, previewRatio, panelWidth, panelHeight) => {
+            previewRatio = 2
+            let  size = obj.findBestMatchPanelSize(sizes, previewRatio, panelWidth, panelHeight)
+            size = Java.cast(size, Java.use('com.mediatek.camera.common.utils.Size'))
+            // size.mWidth.value = 1920
+            // size.mHeight.value = 1080
+
+            console.log('size', size);
+
+            for (let i = 0; i < sizes.size(); i++) {
+                console.log(sizes.get(i));
+            }
+            
+            return interdict(size)
+            // return pass()
+        }
+    },
+    {
+        enabled: true,
+        target: 'com.mediatek.camera.common.mode.photo.device.PhotoDevice2Controller#getTargetPreviewSize',
+        callback:(obj, ratio) => {
+            console.log('ratio', ratio);
+            let size = obj.getTargetPreviewSize(2)
+            console.log(size);
+            
+            return interdict(size)
+        }
+    },
+    {
+        enabled: true,
+        target: 'com.mediatek.camera.common.mode.video.device.v2.VideoDevice2Controller#getSupportedPreviewSizes',
+        callback:(obj, ratio) => {
+            console.log('ratio', ratio);
+            let size = obj.getSupportedPreviewSizes(2)
+            console.log(size);
+            
+            return interdict(size)
+        }
+    }
 ];
 
 /**

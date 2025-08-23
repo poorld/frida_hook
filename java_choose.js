@@ -37,7 +37,7 @@ function g1() {
     });
 }
 
-setImmediate(g2)
+// setImmediate(g2)
 function g2() {
     Java.perform(function() {
         var Location = Java.use('android.location.Location');
@@ -74,4 +74,53 @@ function g2() {
             }
         })
     })
+}
+
+setImmediate(backKeyPress)
+function backKeyPress() {
+    Java.perform(function() {
+        // com.android.server.policy.PhoneWindowManager#backKeyPress
+        Java.choose('com.android.server.policy.PhoneWindowManager', {
+            onMatch: (instance) => {
+                console.log('Found PhoneWindowManager instance:', instance);
+                instance.backKeyPress.implementation = function() {
+                    console.log('backKeyPress called, passing through.');
+                    console.log('mAutofillManagerInternal', instance.mAutofillManagerInternal.value)
+                    return this.backKeyPress();
+                };
+                setTimeout(() => {
+                    // instance.backKeyPress()
+                    let Instrumentation =  Java.use('android.app.Instrumentation')
+                    let inst = Instrumentation.$new()
+                    // Instrumentation inst = new Instrumentation();
+                    console.log('sendKeyDownUpSync');
+                    
+                    inst.sendKeyDownUpSync(4);
+                }, 3000)
+            },
+            onComplete: () => {
+                console.log('PhoneWindowManager enumeration complete.');
+            }
+        });
+        
+    })
+}
+
+// com.android.server.policy.PhoneWindowManager$PolicyHandler#handleMessage
+// setImmediate(handleMessage)
+function handleMessage() {
+    Java.perform(function() {
+        Java.choose('com.android.server.policy.PhoneWindowManager$PolicyHandler', {
+            onMatch: (instance) => {
+                console.log('Found PolicyHandler instance:', instance);
+                instance.handleMessage.implementation = function(msg) {
+                    console.log('PolicyHandler handleMessage called with msg:', msg);
+                    return this.handleMessage(msg);
+                };
+            },
+            onComplete: () => {
+                console.log('PolicyHandler enumeration complete.');
+            }
+        });
+    });
 }
