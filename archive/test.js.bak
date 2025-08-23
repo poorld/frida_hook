@@ -260,7 +260,7 @@ let hooksToApply = [
         }
     },
     {
-        enabled: true,
+        enabled: false,
         target: 'com.mediatek.camera.common.mode.photo.device.PhotoDevice2Controller#getTargetPreviewSize',
         callback:(obj, ratio) => {
             console.log('ratio', ratio);
@@ -271,7 +271,7 @@ let hooksToApply = [
         }
     },
     {
-        enabled: true,
+        enabled: false,
         target: 'com.mediatek.camera.common.mode.video.device.v2.VideoDevice2Controller#getSupportedPreviewSizes',
         callback:(obj, ratio) => {
             console.log('ratio', ratio);
@@ -287,7 +287,7 @@ let hooksToApply = [
  * ===================================================================================
  *                                  HOOK APPLICATION
  * ===================================================================================
- * This section automatically applies all hooks marked as 'enabled: true'.
+ * This section automatically applies all hooks marked as 'enabled: false'.
  * You don't need to modify this part.
  * ===================================================================================
  */
