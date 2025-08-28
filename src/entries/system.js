@@ -8,7 +8,28 @@ const hooksToApply = [
     {
         enabled: false,
         target: 'com.android.server.policy.PhoneWindowManager#interceptKeyBeforeDispatching',
-        callback: () => interdict(-1)
+        callback: (obj, focusedToken, event, policyFlags) => {
+            let keyCode = event.getKeyCode();
+            console.log(keyCode);
+            
+            if (keyCode === 4) {
+                return interdict(0);
+            }
+            return pass()
+        }
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.policy.PhoneWindowManager#interceptKeyBeforeQueueing',
+        callback: (obj,  event, policyFlags) => {
+            let keyCode = event.getKeyCode();
+            console.log(keyCode);
+            
+            if (keyCode === 26) {
+                return interdict(-1);
+            }
+            return pass()
+        }
     },
     {
         enabled: false,
@@ -119,6 +140,13 @@ const hooksToApply = [
     {
         enabled: false,
         target: 'com.android.settings.password.ConfirmDeviceCredentialBaseActivity#getConfirmCredentialTheme'
+    },
+    {
+        enabled: false,
+        target: 'com.android.server.notification.NotificationManagerService#enqueueNotificationInternal',
+        callback: (obj) => {
+            return interdict()
+        }
     }
 ];
 
