@@ -23,13 +23,11 @@ function traceMethod(targetClassMethod, isPrintStack = false) {
 
     // 可选：跳过 Lambda 方法
     if (targetMethod.includes("lambda")) {
-        console.log(`Skipping Lambda method: ${targetClassMethod}`);
         return;
     }
 
     // access$
     if (targetMethod.includes("access$")) {
-        console.log(`Skipping access$ method: ${targetClassMethod}`);
         return;
     }
 
@@ -38,7 +36,6 @@ function traceMethod(targetClassMethod, isPrintStack = false) {
     ]);
 
     if (previewMethods.has(targetMethod)) {
-        console.log(`Skipping preview method: ${targetClassMethod}`);
         return;
     }
 
@@ -73,7 +70,7 @@ function traceMethod(targetClassMethod, isPrintStack = false) {
             }
 
             const log = {
-                method: `${targetClassMethod} [overload ${index}]`,
+                method: `${targetClassMethod}${overloadCount > 1 ? ` [overload ${index}]` : ''}`,
                 args: args.map((arg, i) => ({
                     index: i,
                     value: arg,
@@ -81,24 +78,23 @@ function traceMethod(targetClassMethod, isPrintStack = false) {
                 })),
             };
 
-            let retval;
             try {
-                retval = overload.apply(this, args);
+                const retval = overload.apply(this, args);
                 log.returns = { value: retval, string: retval ? String(retval) : 'null' };
+                LOG(log, { color: Color.Yellow, indent: true });
+                return retval;
             } catch (e) {
-                LOG(`Error in ${targetClassMethod}: ${e}`, { level: 'error', color: Color.Red });
+                log.error = e.stack || e.toString();
+                LOG(log, { level: 'error', color: Color.Red, indent: true });
+                throw e;
             }
-
-            LOG(log, { color: Color.Yellow, indent: true });
-            return retval;
         };
     });
 }
 
 
-function uniqBy(array) {
-    const seen = new Set();
-    return array.filter(item => !seen.has(item) && seen.add(item));
+function uniq(array) {
+    return [...new Set(array)];
 }
 
 function traceClass(targetClass, printStack = false) {
@@ -119,19 +115,36 @@ function traceClass(targetClass, printStack = false) {
             return;
         }
 
-        const parsedMethods = methods.map(method => 
-            method.toString().replace(targetClass + ".", "TOKEN").match(/\sTOKEN(.*)\(/)[1]
-        );
-        
-        const uniqueMethods = uniqBy(parsedMethods);
+        const uniqueMethods = uniq(methods.map(method => method.getName()));
+
+        if (uniqueMethods.length === 0) {
+            return;
+        }
+
         LOG(`Tracing ${targetClass} with ${uniqueMethods.length} unique methods`, { color: Color.Green });
         console.log("Methods: " + uniqueMethods.join(", "));
-        uniqueMethods.forEach((method,index) => {
+        uniqueMethods.forEach((method) => {
             traceMethod(`${targetClass}.${method}`, printStack);
         });
 
         // 释放 hook 对象
         hook.$dispose();
+    });
+}
+
+function tracePackage(packageName, printStack = false) {
+    Java.perform(() => {
+        LOG(`Tracing package: ${packageName}`, { color: Color.Green });
+        Java.enumerateLoadedClasses({
+            onMatch: function(className) {
+                if (className.startsWith(packageName + ".")) {
+                    traceClass(className, printStack);
+                }
+            },
+            onComplete: function() {
+                LOG(`Finished tracing package: ${packageName}`, { color: Color.Green });
+            }
+        });
     });
 }
 
@@ -160,7 +173,7 @@ function traceClass(targetClass, printStack = false) {
 // setImmediate(traceClass('com.android.server.wm.WindowState'))
 // setImmediate(traceClass('com.android.server.wm.DisplayPolicy'))
 // setImmediate(traceClass('com.android.server.display.DisplayManagerService'))
-setImmediate(traceClass('com.android.server.display.DisplayManagerService$BinderService'))
+// setImmediate(traceClass('com.android.server.display.DisplayManagerService$BinderService'))
 
 
 // setImmediate(traceClass('android.hardware.camera2.CameraManager$CameraManagerGlobal'))
@@ -181,3 +194,4 @@ setImmediate(traceClass('com.android.server.display.DisplayManagerService$Binder
 // setImmediate(traceClass('com.android.launcher3.LauncherModel'))
 // setImmediate(traceClass('com.android.permissioncontroller.permission.model.AppPermissions'))
 // setImmediate(traceClass('com.android.server.policy.PhoneWindowManager'))
+setImmediate(() => tracePackage('com.android.certinstaller'));
